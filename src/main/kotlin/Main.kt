@@ -1,16 +1,18 @@
 package org.example
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 
 fun main() {
-    val flow = getFlow()
+    val flow = (1..10).asFlow()
 
     runBlocking {
         var start1 = System.currentTimeMillis()
         flow
             .onEach { delay(100) }
-            .throttleFirst(200)
+            .throttleFirst(450)
             .collect {
                 print("${System.currentTimeMillis() - start1} - $it; ")
             }
@@ -18,20 +20,9 @@ fun main() {
         start1 = System.currentTimeMillis()
         flow
             .onEach { delay(100) }
-            .throttleLatest(200)
+            .throttleLatest(450)
             .collect {
                 print("${System.currentTimeMillis() - start1} - $it; ")
             }
-
-    }
-
-
-}
-
-private fun getFlow(): Flow<Int> = flow {
-    list.onEach {
-        emit(it)
     }
 }
-
-private val list = (1..10).toList()

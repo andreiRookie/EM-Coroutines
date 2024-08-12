@@ -2,77 +2,57 @@ package org.example
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.util.concurrent.TimeUnit
 
 
 fun <T> Flow<T>.throttleFirst(
-    intervalDuration: Long,
-    unit: TimeUnit = TimeUnit.MILLISECONDS,
-): Flow<T> {
+    intervalDurationMillis: Long,
+): Flow<T> = flow {
     var wasEmitted = false
-    var currentTime = 0L
-    var diff = 0L
+    var diff: Long
     var currentIntervalTime = System.currentTimeMillis()
 
-    return flow {
-        collect { value ->
+    collect { value ->
 
-            currentTime = System.currentTimeMillis()
-            diff = currentTime - currentIntervalTime
+        diff = System.currentTimeMillis() - currentIntervalTime
 
-            if (diff >= intervalDuration) {
-                currentIntervalTime += diff
-                wasEmitted = false
-            }
+        if (diff >= intervalDurationMillis) {
+            currentIntervalTime += diff
+            wasEmitted = false
+        }
 
-            if (!wasEmitted) {
-                emit(value)
-                wasEmitted = true
-            }
+        if (!wasEmitted) {
+            emit(value)
+            wasEmitted = true
         }
     }
 }
 
 fun <T> Flow<T>.throttleLatest(
-    intervalDuration: Long,
-    unit: TimeUnit = TimeUnit.MILLISECONDS,
-): Flow<T> {
-    var lastValue: Any? = null
-    var currentTime = 0L
-    var diff = 0L
+    intervalDurationMillis: Long,
+): Flow<T> = flow {
+
+    var lastValue: Any?
+    var diff: Long
     var wasEmitted = false
-    var isFirstValue = true
     var currentIntervalTime = System.currentTimeMillis()
 
+    collect { value ->
 
-    return flow {
-        collect { value ->
+        diff = System.currentTimeMillis() - currentIntervalTime
 
-//            if (isFirstValue) {
-//                lastValue = value
-//                lastValue?.let { emit(lastValue as T) }
-//                isFirstValue = false
-//
-//                currentTime = System.currentTimeMillis()
-//                diff = currentTime - currentIntervalTime
-//                currentIntervalTime += diff
-//            } else {
+        if (diff < intervalDurationMillis) {
+            lastValue = value
+        } else {
+            currentIntervalTime += diff
 
-                currentTime = System.currentTimeMillis()
-                diff = currentTime - currentIntervalTime
+            lastValue = value
+            wasEmitted = false
+        }
 
-                if (diff < intervalDuration) {
-                    lastValue = value
-                } else {
-                    currentIntervalTime += diff
-                    wasEmitted = false
-                }
-
-                if (!wasEmitted) {
-                    lastValue?.let { emit(lastValue as T) }
-                    wasEmitted = true
-                }
-            }
-//        }
+        if (!wasEmitted) {
+            lastValue?.let { emit(lastValue as T) }
+            wasEmitted = true
+        }
     }
 }
+
