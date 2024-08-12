@@ -11,6 +11,9 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
 }
 
 tasks.test {
